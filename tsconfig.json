@@ -1,8 +1,8 @@
 {
     "compilerOptions": {
-        "module": "nodenext",
+        "module": "esnext",
         "target": "esnext",
-        "types": [],
+        "types": ["vite/client"],
         "sourceMap": true,
         "declaration": true,
         "declarationMap": true,
@@ -15,7 +15,7 @@
         "noUncheckedSideEffectImports": true,
         "moduleDetection": "force",
         "skipLibCheck": true,
-        "moduleResolution": "nodenext"
+        "moduleResolution": "bundler"
     },
     "include": ["src/**/*.ts"]
 }
