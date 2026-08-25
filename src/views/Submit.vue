@@ -31,6 +31,7 @@ const background = ref("");
 const sources = ref<string[]>([]);
 const personality = ref("");
 const description = ref("");
+const specyMode = ref<"pure" | "mixed">("pure");
 const specyPure = ref<number>(0);
 const specyMixed = ref<number[]>([]);
 const height = ref<number>(0);
@@ -46,7 +47,8 @@ const relFriends = ref<number[]>([]);
 const relChildren = ref<number[]>([]);
 
 async function createCharacter() {
-    const specy = specyMixed.value.length > 0 ? specyMixed.value : specyPure.value;
+    const specy =
+        specyMode.value === "mixed" ? specyMixed.value : specyPure.value;
     await api.characterCreate({
         tags: tags.value,
         displayName: displayName.value,
@@ -90,16 +92,34 @@ async function createCharacter() {
         </div>
         <label><input type="checkbox" v-model="isDied" /> 已故</label><br />
         <label><input type="checkbox" v-model="isFemale" /> 女性</label><br />
-        <label>背景故事 <input v-model="background" /></label><br />
+        <label>背景故事
+            <textarea v-model="background"></textarea>
+        </label><br />
         <div>来源作品
             <ArrayEditor v-model="sources" />
         </div>
-        <label>人格 <input v-model="personality" /></label><br />
-        <label>综合介绍 <input v-model="description" /></label><br />
-        <label>纯血种物种ID <input v-model.number="specyPure" type="number" /></label><br />
-        <div>混血种物种ID
-            <ArrayEditor v-model="specyMixed" type="number" />
+        <label>人格
+            <textarea v-model="personality"></textarea>
+        </label><br />
+        <label>综合介绍
+            <textarea v-model="description"></textarea>
+        </label><br />
+        <div>
+            <label>
+                <input type="radio" value="pure" v-model="specyMode" /> 纯血种
+            </label>
+            <label>
+                <input type="radio" value="mixed" v-model="specyMode" /> 混血种
+            </label>
         </div>
+        <template v-if="specyMode === 'pure'">
+            <label>纯血种物种ID <input v-model.number="specyPure" type="number" /></label><br />
+        </template>
+        <template v-else>
+            <div>混血种物种ID
+                <ArrayEditor v-model="specyMixed" type="number" />
+            </div>
+        </template>
         <label>身高 <input v-model.number="height" type="number" /></label><br />
         <label>长度 <input v-model.number="length" type="number" /></label><br />
         <fieldset>
