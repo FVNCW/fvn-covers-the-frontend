@@ -7,6 +7,8 @@ export default createRouter({
         { path: "/register", component: () => import("@/views/Register.vue") },
         { path: "/login", component: () => import("@/views/Login.vue") },
         { path: "/submit", component: () => import("@/views/Submit.vue") },
+        { path: "/specy", component: () => import("@/views/Specy.vue") },
+        { path: "/illustration", component: () => import("@/views/Illustration.vue") },
         { path: "/:pathMatch(.*)*", component: () => import("@/views/NotFound.vue") },
     ],
 });

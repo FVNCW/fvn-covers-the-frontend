@@ -9,7 +9,7 @@ export function authorizableFetch(
 ) {
     return fetch(apiBase(url), {
         method,
-        body: JSON.stringify(body),
+        ...(body !== null ? { body: JSON.stringify(body) } : {}),
         credentials: authorize ? "include" : "omit",
         headers: {
             "Content-Type": "application/json",
