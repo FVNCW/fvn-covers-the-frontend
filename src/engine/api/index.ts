@@ -127,4 +127,8 @@ export const api = {
         ),
     specyDelete: (id: number) =>
         authorizableFetch(`/api/specy/delete/${id}`, "DELETE").then((r) => read<Specy>(r)),
+    specyRename: (id: number, displayName: string) =>
+        authorizableFetch(`/api/specy/rename/${id}`, "PATCH", { displayName }).then(
+            (r) => read<Specy>(r),
+        ),
 };
