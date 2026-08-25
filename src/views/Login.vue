@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { auth } from "@/engine/app";
+import { useRouter } from "vue-router";
 
+const router = useRouter();
 const email = ref("");
 const password = ref("");
 
@@ -17,6 +19,7 @@ async function apply() {
 			}
 		} else {
 			alert("登录成功");
+			router.push("/");
 		}
 	} catch (e) {
 		alert(e);

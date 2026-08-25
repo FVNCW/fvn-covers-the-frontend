@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { auth } from "@/engine/app";
+import { useRouter } from "vue-router";
 
+const router = useRouter();
 const username = ref("");
 const email = ref("");
 const password = ref("");
@@ -19,6 +21,7 @@ async function apply() {
 			}
 		} else {
 			alert("注册成功！");
+			router.push("/");
 		}
 	} catch (e) {
 		alert(e);
