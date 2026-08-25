@@ -90,7 +90,7 @@ export const api = {
             (r) => read<Illustration[]>(r),
         ),
     objectInfo: (id: string) =>
-        authorizableFetch(`/api/object/download/${encodeURIComponent(id)}`, "GET", null, false)
+        authorizableFetch(`/api/object/metadata/${encodeURIComponent(id)}`, "GET", null, false)
             .then((r) => read<TextureObject>(r)),
     tryMix: async (specy: string[]) => {
         const qs = new URLSearchParams();

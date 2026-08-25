@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import ArrayEditor from "@/components/ArrayEditor.vue";
+import ObjectUploader from "@/components/ObjectUploader.vue";
 import { api, type TextureObject } from "@/engine/api";
 
 function readFileAsBase64(file: File): Promise<string> {
@@ -81,7 +82,7 @@ async function createCharacter() {
 <template>
     <div>
         <h2>上传对象</h2>
-        <input type="file" @change="file = (($event.target as HTMLInputElement).files?.[0]) ?? null" />
+        <ObjectUploader v-model="file" />
         <button @click="uploadObject">上传</button>
         <div v-if="uploaded">已上传：id={{ uploaded.id }} hash={{ uploaded.hash }}</div>
 

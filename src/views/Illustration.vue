@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
+import ObjectUploader from "@/components/ObjectUploader.vue";
 import { api, type Illustration, type TextureObject } from "@/engine/api";
+import { apiBase } from "@/engine/util/api";
 
 function readFileAsBase64(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -14,12 +16,17 @@ const objId = ref("");
 const objInfo = ref<TextureObject | null>(null);
 const notice = ref("");
 const objFile = ref<File | null>(null);
+const objPreviewSrc = ref("");
 async function downloadInfo() {
     try {
         objInfo.value = await api.objectInfo(objId.value);
+        objPreviewSrc.value = objId.value
+            ? apiBase(`/api/object/download/${encodeURIComponent(objId.value)}`)
+            : "";
         notice.value = "";
     } catch (e) {
         objInfo.value = null;
+        objPreviewSrc.value = "";
         notice.value = String(e);
     }
 }
@@ -51,6 +58,7 @@ async function addIllustration() {
         tags,
     });
     alert("已添加");
+    await refreshLists();
 }
 async function deleteIllustration() {
     await api.illustrationDelete(illDeleteId.value);
@@ -77,10 +85,11 @@ onMounted(refreshLists);
         <h2>对象管理</h2>
         <label>对象ID <input v-model="objId" /></label>
         <button @click="downloadInfo">查询信息</button>
-        <input type="file" @change="objFile = (($event.target as HTMLInputElement).files?.[0]) ?? null" />
+        <ObjectUploader v-model="objFile" />
         <button @click="modifyObject">修改对象</button>
         <button @click="deleteObject">删除对象</button>
         <div v-if="objInfo">id={{ objInfo.id }} hash={{ objInfo.hash }} uploader={{ objInfo.uploader }}</div>
+        <img v-if="objPreviewSrc" class="obj-preview" :src="objPreviewSrc" alt="对象图片" />
         <p>{{ notice }}</p>
 
         <h2>添加立绘</h2>
@@ -106,7 +115,7 @@ onMounted(refreshLists);
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="o in objects" :key="o.id" class="clickable" @click="objId = o.id">
+                <tr v-for="o in objects" :key="o.id" class="clickable" @click="objId = o.id; illObjectId = o.id">
                     <td>{{ o.id }}</td>
                     <td>{{ o.hash }}</td>
                     <td>{{ o.uploader }}</td>
@@ -126,7 +135,7 @@ onMounted(refreshLists);
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="i in illustrations" :key="i.id">
+                <tr v-for="i in illustrations" :key="i.id" class="clickable" @click="objId = i.objectId">
                     <td>{{ i.id }}</td>
                     <td>{{ i.displayName }}</td>
                     <td>{{ i.objectId }}</td>
@@ -138,6 +147,16 @@ onMounted(refreshLists);
     </div>
 </template>
 <style scoped>
+.obj-preview {
+    max-width: 200px;
+    max-height: 200px;
+    object-fit: contain;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    display: block;
+    margin-top: 8px;
+}
+
 .clickable {
     cursor: pointer;
 }
