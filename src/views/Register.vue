@@ -7,11 +7,16 @@ const email = ref("");
 const password = ref("");
 
 async function apply() {
-	console.log(await auth.signUp.email({
-		email: email.value,
-		password: password.value,
-		name: username.value
-	}));
+	try {
+		const response = await auth.signUp.email({
+			email: email.value,
+			password: password.value,
+			name: username.value
+		});
+		if (response.error?.status !== 200) {
+			alert(response.error?.message);
+		}
+	} catch { }
 }
 </script>
 <template>
