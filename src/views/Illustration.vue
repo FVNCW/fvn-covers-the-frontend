@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { api, type TextureObject } from "@/engine/api";
+import { onMounted, ref } from "vue";
+import { api, type Illustration, type TextureObject } from "@/engine/api";
 
 function readFileAsBase64(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -33,6 +33,7 @@ async function deleteObject() {
     await api.objectDelete(objId.value);
     objInfo.value = null;
     notice.value = "已删除";
+    objects.value = await api.objectList();
 }
 const characterId = ref<number>(0);
 const illObjectId = ref("");
@@ -55,6 +56,21 @@ async function deleteIllustration() {
     await api.illustrationDelete(illDeleteId.value);
     alert("已删除");
 }
+const objects = ref<TextureObject[]>([]);
+const illustrations = ref<Illustration[]>([]);
+const listNotice = ref("");
+async function refreshLists() {
+    try {
+        [objects.value, illustrations.value] = await Promise.all([
+            api.objectList(),
+            api.illustrationList(),
+        ]);
+        listNotice.value = "";
+    } catch (e) {
+        listNotice.value = String(e);
+    }
+}
+onMounted(refreshLists);
 </script>
 <template>
     <div>
@@ -77,5 +93,56 @@ async function deleteIllustration() {
         <h2>删除立绘</h2>
         <label>立绘ID <input v-model.number="illDeleteId" type="number" /></label>
         <button @click="deleteIllustration">删除</button>
+
+        <p>{{ listNotice }}</p>
+
+        <h2>对象列表</h2>
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>哈希</th>
+                    <th>上传者</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="o in objects" :key="o.id" class="clickable" @click="objId = o.id">
+                    <td>{{ o.id }}</td>
+                    <td>{{ o.hash }}</td>
+                    <td>{{ o.uploader }}</td>
+                </tr>
+            </tbody>
+        </table>
+        <p v-if="!objects.length && !listNotice">暂无对象</p>
+
+        <h2>立绘列表</h2>
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>名字</th>
+                    <th>对象ID</th>
+                    <th>标签</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="i in illustrations" :key="i.id">
+                    <td>{{ i.id }}</td>
+                    <td>{{ i.displayName }}</td>
+                    <td>{{ i.objectId }}</td>
+                    <td>{{ i.tags.join("、") }}</td>
+                </tr>
+            </tbody>
+        </table>
+        <p v-if="!illustrations.length && !listNotice">暂无立绘</p>
     </div>
 </template>
+<style scoped>
+.clickable {
+    cursor: pointer;
+}
+
+.clickable:hover {
+    background: #f0f2f8;
+}
+</style>

@@ -81,6 +81,14 @@ export const api = {
         ),
     specyList: () =>
         authorizableFetch("/api/specy/list", "GET", null, false).then((r) => read<Specy[]>(r)),
+    objectList: () =>
+        authorizableFetch("/api/object/list", "GET", null, false).then(
+            (r) => read<TextureObject[]>(r),
+        ),
+    illustrationList: () =>
+        authorizableFetch("/api/illustration/list", "GET", null, false).then(
+            (r) => read<Illustration[]>(r),
+        ),
     objectInfo: (id: string) =>
         authorizableFetch(`/api/object/download/${encodeURIComponent(id)}`, "GET", null, false)
             .then((r) => read<TextureObject>(r)),
