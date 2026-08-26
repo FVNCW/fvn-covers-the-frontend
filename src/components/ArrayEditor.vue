@@ -34,7 +34,11 @@ function removeAt(i: number) {
 </script>
 <template>
     <div style="display: flex; flex-direction: column; gap: 8px">
-        <div v-for="(item, i) in items" :key="i" style="display: flex; gap: 8px; align-items: center">
+        <div
+            v-for="(item, i) in items"
+            :key="i"
+            style="display: flex; gap: 8px; align-items: center"
+        >
             <n-input
                 :type="type === 'number' ? 'number' : 'text'"
                 :value="item"

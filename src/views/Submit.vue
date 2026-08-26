@@ -61,9 +61,10 @@ const canCreate = computed(() => {
 });
 
 async function createCharacter() {
-    const specy = specyMode.value === "mixed"
-        ? specyMixed.value.map((s) => s.id)
-        : (specyPure.value?.id ?? 0);
+    const specy =
+        specyMode.value === "mixed"
+            ? specyMixed.value.map((s) => s.id)
+            : (specyPure.value?.id ?? 0);
     const fur = furColors.value.map(hexToRgb);
     const eye = eyeColors.value.map(hexToRgb);
     await api.characterCreate({
@@ -118,11 +119,19 @@ function resetForm() {
 }
 </script>
 <template>
-    <n-space vertical size="large" justify="center" align="center" style="max-width: 720px; margin: 0 auto"><n-card title="上传对象" size="small" style="width: 100%">
+    <n-space
+        vertical
+        size="large"
+        justify="center"
+        align="center"
+        style="max-width: 720px; margin: 0 auto"
+        ><n-card title="上传对象" size="small" style="width: 100%">
             <n-space vertical>
                 <ObjectUploader v-model="file" />
                 <n-button type="primary" @click="uploadObject">上传</n-button>
-                <n-text v-if="uploaded">已上传：id={{ uploaded.id }} hash={{ uploaded.hash }}</n-text>
+                <n-text v-if="uploaded"
+                    >已上传：id={{ uploaded.id }} hash={{ uploaded.hash }}</n-text
+                >
             </n-space>
         </n-card>
 
@@ -139,7 +148,11 @@ function resetForm() {
                     <n-checkbox v-model:checked="isFemale">女性</n-checkbox>
                 </n-space>
                 <n-form-item label="背景故事">
-                    <n-input v-model:value="background" type="textarea" placeholder="输入背景故事" />
+                    <n-input
+                        v-model:value="background"
+                        type="textarea"
+                        placeholder="输入背景故事"
+                    />
                 </n-form-item>
                 <n-form-item label="来源作品">
                     <ArrayEditor v-model="sources" />
@@ -148,7 +161,11 @@ function resetForm() {
                     <n-input v-model:value="personality" type="textarea" placeholder="输入人格" />
                 </n-form-item>
                 <n-form-item label="综合介绍">
-                    <n-input v-model:value="description" type="textarea" placeholder="输入综合介绍" />
+                    <n-input
+                        v-model:value="description"
+                        type="textarea"
+                        placeholder="输入综合介绍"
+                    />
                 </n-form-item>
                 <n-form-item label="物种类型">
                     <n-radio-group v-model:value="specyMode">

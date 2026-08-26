@@ -37,7 +37,12 @@ async function apply() {
         <n-space vertical>
             <n-input v-model:value="username" type="text" placeholder="用户名" />
             <n-input v-model:value="email" type="text" placeholder="邮箱" />
-            <n-input v-model:value="password" type="password" placeholder="密码" @keyup.enter="apply" />
+            <n-input
+                v-model:value="password"
+                type="password"
+                placeholder="密码"
+                @keyup.enter="apply"
+            />
             <n-button type="primary" block :loading="loading" @click="apply">注册</n-button>
         </n-space>
     </n-card>

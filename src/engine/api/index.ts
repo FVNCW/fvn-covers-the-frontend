@@ -179,7 +179,7 @@ export const api = {
             read<Specy>(r),
         ),
     search: (type: ContentType, condition: AnyCondition) =>
-        authorizableFetch("/api/search", "POST", { type, condition }).then(
-            (r) => read<(Character | TextureObject | Illustration | Specy)[]>(r),
+        authorizableFetch("/api/search", "POST", { type, condition }).then((r) =>
+            read<(Character | TextureObject | Illustration | Specy)[]>(r),
         ),
 };
