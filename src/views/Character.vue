@@ -1,16 +1,41 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
-import { api, type Character, type Specy } from "@/engine/api";
+import { api, type Character, type Illustration, type Specy } from "@/engine/api";
+import { apiBase } from "@/engine/util/api";
 
 const route = useRoute();
 const character = ref<Character | null>(null);
 const error = ref("");
 const specys = ref<Specy[]>([]);
 const charMap = ref<Map<number, string>>(new Map());
+const illMap = ref<Map<number, Illustration>>(new Map());
+const carouselIndex = ref(0);
 
 function rgb(c: { r: number; g: number; b: number }) {
     return `rgb(${c.r}, ${c.g}, ${c.b})`;
+}
+
+const portraits = computed<Illustration[]>(() =>
+    (character.value?.illustrations ?? [])
+        .map((id) => illMap.value.get(id))
+        .filter((x): x is Illustration => !!x),
+);
+
+function imgUrl(objectId: string) {
+    return apiBase(`/api/object/download/${encodeURIComponent(objectId)}`);
+}
+
+function prev() {
+    if (portraits.value.length) {
+        carouselIndex.value =
+            (carouselIndex.value - 1 + portraits.value.length) % portraits.value.length;
+    }
+}
+function next() {
+    if (portraits.value.length) {
+        carouselIndex.value = (carouselIndex.value + 1) % portraits.value.length;
+    }
 }
 
 const specyNames = computed(() => {
@@ -37,8 +62,9 @@ onMounted(async () => {
             api.characterData(id),
             api.specyList(),
         ]);
-        const chars = await api.characterList();
+        const [chars, ills] = await Promise.all([api.characterList(), api.illustrationList()]);
         charMap.value = new Map(chars.map((c) => [c.id, c.displayName]));
+        illMap.value = new Map(ills.map((i) => [i.id, i]));
     } catch (e) {
         error.value = String(e);
     }
@@ -124,16 +150,34 @@ onMounted(async () => {
                     <dt>关系（{{ key }}）</dt>
                     <dd>{{ relationNames(ids) || "无" }}</dd>
                 </template>
-                <dt>插图</dt>
+                <dt>立绘</dt>
                 <dd>
-                    <RouterLink
-                        v-for="img in character.illustrations"
-                        :key="img"
-                        :to="`/illustration`"
-                        class="chip"
-                        >插图 #{{ img }}</RouterLink
-                    >
-                    <span v-if="!character.illustrations.length">无</span>
+                    <div v-if="portraits.length" class="carousel">
+                        <button class="arrow" @click="prev">‹</button>
+                        <div class="stage">
+                            <img
+                                :src="imgUrl(portraits[carouselIndex].objectId)"
+                                :alt="portraits[carouselIndex].displayName"
+                            />
+                            <div class="caption">
+                                {{ portraits[carouselIndex].displayName }}
+                                <span v-for="t in portraits[carouselIndex].tags" :key="t" class="chip">{{
+                                    t
+                                }}</span>
+                            </div>
+                            <div class="dots">
+                                <span
+                                    v-for="(p, i) in portraits"
+                                    :key="p.id"
+                                    class="dot"
+                                    :class="{ active: i === carouselIndex }"
+                                    @click="carouselIndex = i"
+                                ></span>
+                            </div>
+                        </div>
+                        <button class="arrow" @click="next">›</button>
+                    </div>
+                    <span v-else>无</span>
                 </dd>
             </dl>
         </div>
@@ -175,5 +219,57 @@ dd {
     border: 1px solid #ccc;
     margin-right: 6px;
     vertical-align: middle;
+}
+.carousel {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.stage {
+    position: relative;
+    max-width: 320px;
+    text-align: center;
+}
+.stage img {
+    max-width: 100%;
+    max-height: 360px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    background: #fff;
+}
+.caption {
+    margin-top: 4px;
+    font-size: 13px;
+    color: #333;
+}
+.arrow {
+    border: 1px solid #ccc;
+    background: #fff;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.arrow:hover {
+    background: #f0f2f8;
+}
+.dots {
+    margin-top: 6px;
+    text-align: center;
+}
+.dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #cfd6e4;
+    margin: 0 3px;
+    cursor: pointer;
+}
+.dot.active {
+    background: #4c6ef5;
 }
 </style>
