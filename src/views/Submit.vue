@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import ArrayEditor from "@/components/ArrayEditor.vue";
+import ContentSelector from "@/components/ContentSelector.vue";
 import ObjectUploader from "@/components/ObjectUploader.vue";
-import { api, type TextureObject } from "@/engine/api";
+import { api, type Character, type Specy, type TextureObject } from "@/engine/api";
 
 function readFileAsBase64(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -33,8 +34,8 @@ const sources = ref<string[]>([]);
 const personality = ref("");
 const description = ref("");
 const specyMode = ref<"pure" | "mixed">("pure");
-const specyPure = ref<number>(0);
-const specyMixed = ref<number[]>([]);
+const specyPure = ref<Specy | null>(null);
+const specyMixed = ref<Specy[]>([]);
 const height = ref<number>(0);
 const length = ref<number>(0);
 const furR = ref<number>(0);
@@ -43,12 +44,15 @@ const furB = ref<number>(0);
 const eyeR = ref<number>(0);
 const eyeG = ref<number>(0);
 const eyeB = ref<number>(0);
-const relParents = ref<number[]>([]);
-const relFriends = ref<number[]>([]);
-const relChildren = ref<number[]>([]);
+const relParents = ref<Character[]>([]);
+const relFriends = ref<Character[]>([]);
+const relChildren = ref<Character[]>([]);
 
 async function createCharacter() {
-    const specy = specyMode.value === "mixed" ? specyMixed.value : specyPure.value;
+    const specy =
+        specyMode.value === "mixed"
+            ? specyMixed.value.map((s) => s.id)
+            : (specyPure.value?.id ?? 0);
     await api.characterCreate({
         tags: tags.value,
         displayName: displayName.value,
@@ -69,9 +73,9 @@ async function createCharacter() {
             other: {},
         },
         relationShips: {
-            parents: relParents.value,
-            friends: relFriends.value,
-            children: relChildren.value,
+            parents: relParents.value.map((c) => c.id),
+            friends: relFriends.value.map((c) => c.id),
+            children: relChildren.value.map((c) => c.id),
             other: {},
         },
     });
@@ -114,12 +118,15 @@ async function createCharacter() {
             <label> <input type="radio" value="mixed" v-model="specyMode" /> 混血种 </label>
         </div>
         <template v-if="specyMode === 'pure'">
-            <label>纯血种物种ID <input v-model.number="specyPure" type="number" /></label><br />
+            <div>
+                纯血种物种
+                <ContentSelector v-model="specyPure" type="specy" />
+            </div>
         </template>
         <template v-else>
             <div>
-                混血种物种ID
-                <ArrayEditor v-model="specyMixed" type="number" />
+                混血种物种
+                <ContentSelector v-model:selected="specyMixed" type="specy" multiple />
             </div>
         </template>
         <label>身高 <input v-model.number="height" type="number" /></label><br />
@@ -137,16 +144,16 @@ async function createCharacter() {
             <input v-model.number="eyeB" type="number" />
         </fieldset>
         <div>
-            父母ID
-            <ArrayEditor v-model="relParents" type="number" />
+            父母
+            <ContentSelector v-model:selected="relParents" type="character" multiple />
         </div>
         <div>
-            朋友ID
-            <ArrayEditor v-model="relFriends" type="number" />
+            朋友
+            <ContentSelector v-model:selected="relFriends" type="character" multiple />
         </div>
         <div>
-            孩子ID
-            <ArrayEditor v-model="relChildren" type="number" />
+            孩子
+            <ContentSelector v-model:selected="relChildren" type="character" multiple />
         </div>
         <button @click="createCharacter">创建角色</button>
     </div>

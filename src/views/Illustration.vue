@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
+import ContentSelector from "@/components/ContentSelector.vue";
 import ObjectUploader from "@/components/ObjectUploader.vue";
-import { api, type Illustration, type TextureObject } from "@/engine/api";
+import { api, type Character, type Illustration, type TextureObject } from "@/engine/api";
 import { apiBase } from "@/engine/util/api";
 
 function readFileAsBase64(file: File): Promise<string> {
@@ -12,17 +13,17 @@ function readFileAsBase64(file: File): Promise<string> {
         reader.readAsDataURL(file);
     });
 }
-const objId = ref("");
+const obj = ref<TextureObject | null>(null);
 const objInfo = ref<TextureObject | null>(null);
 const notice = ref("");
 const objFile = ref<File | null>(null);
 const objPreviewSrc = ref("");
 async function downloadInfo() {
+    const id = obj.value?.id;
+    if (!id) return alert("请选择对象");
     try {
-        objInfo.value = await api.objectInfo(objId.value);
-        objPreviewSrc.value = objId.value
-            ? apiBase(`/api/object/download/${encodeURIComponent(objId.value)}`)
-            : "";
+        objInfo.value = await api.objectInfo(id);
+        objPreviewSrc.value = apiBase(`/api/object/download/${encodeURIComponent(id)}`);
         notice.value = "";
     } catch (e) {
         objInfo.value = null;
@@ -31,29 +32,35 @@ async function downloadInfo() {
     }
 }
 async function modifyObject() {
-    if (!objFile.value || !objId.value) return alert("请选择文件并填写对象ID");
-    objInfo.value = await api.objectModify(objId.value, await readFileAsBase64(objFile.value));
+    const id = obj.value?.id;
+    if (!objFile.value || !id) return alert("请选择文件并选择对象");
+    objInfo.value = await api.objectModify(id, await readFileAsBase64(objFile.value));
     notice.value = "已修改";
 }
 async function deleteObject() {
-    if (!objId.value) return alert("请填写对象ID");
-    await api.objectDelete(objId.value);
+    const id = obj.value?.id;
+    if (!id) return alert("请选择对象");
+    await api.objectDelete(id);
     objInfo.value = null;
+    obj.value = null;
     notice.value = "已删除";
     objects.value = await api.objectList();
 }
-const characterId = ref<number>(0);
-const illObjectId = ref("");
+const character = ref<Character | null>(null);
+const illObject = ref<TextureObject | null>(null);
 const illName = ref("");
 const illTags = ref("");
-const illDeleteId = ref<number>(0);
+const illDelete = ref<Illustration | null>(null);
 async function addIllustration() {
+    const characterId = character.value?.id;
+    const objectId = illObject.value?.id;
+    if (!characterId || !objectId) return alert("请选择角色和对象");
     const tags = illTags.value
         .split(",")
         .map((t) => t.trim())
         .filter(Boolean);
-    await api.illustrationAdd(characterId.value, {
-        objectId: illObjectId.value,
+    await api.illustrationAdd(characterId, {
+        objectId,
         displayName: illName.value,
         tags,
     });
@@ -61,8 +68,12 @@ async function addIllustration() {
     await refreshLists();
 }
 async function deleteIllustration() {
-    await api.illustrationDelete(illDeleteId.value);
+    const id = illDelete.value?.id;
+    if (!id) return alert("请选择立绘");
+    await api.illustrationDelete(id);
+    illDelete.value = null;
     alert("已删除");
+    await refreshLists();
 }
 const objects = ref<TextureObject[]>([]);
 const illustrations = ref<Illustration[]>([]);
@@ -83,7 +94,7 @@ onMounted(refreshLists);
 <template>
     <div>
         <h2>对象管理</h2>
-        <label>对象ID <input v-model="objId" /></label>
+        <ContentSelector v-model="obj" type="object" />
         <button @click="downloadInfo">查询信息</button>
         <ObjectUploader v-model="objFile" />
         <button @click="modifyObject">修改对象</button>
@@ -95,14 +106,20 @@ onMounted(refreshLists);
         <p>{{ notice }}</p>
 
         <h2>添加立绘</h2>
-        <label>角色ID <input v-model.number="characterId" type="number" /></label><br />
-        <label>对象ID <input v-model="illObjectId" /></label><br />
+        <div>
+            角色
+            <ContentSelector v-model="character" type="character" />
+        </div>
+        <div>
+            对象
+            <ContentSelector v-model="illObject" type="object" />
+        </div>
         <label>立绘名字 <input v-model="illName" /></label><br />
         <label>标签(逗号分隔) <input v-model="illTags" /></label><br />
         <button @click="addIllustration">添加</button>
 
         <h2>删除立绘</h2>
-        <label>立绘ID <input v-model.number="illDeleteId" type="number" /></label>
+        <ContentSelector v-model="illDelete" type="illustration" />
         <button @click="deleteIllustration">删除</button>
 
         <p>{{ listNotice }}</p>
@@ -122,8 +139,8 @@ onMounted(refreshLists);
                     :key="o.id"
                     class="clickable"
                     @click="
-                        objId = o.id;
-                        illObjectId = o.id;
+                        obj = o;
+                        illObject = o;
                     "
                 >
                     <td>{{ o.id }}</td>
@@ -149,7 +166,7 @@ onMounted(refreshLists);
                     v-for="i in illustrations"
                     :key="i.id"
                     class="clickable"
-                    @click="objId = i.objectId"
+                    @click="obj = objects.find((o) => o.id === i.objectId) ?? null"
                 >
                     <td>{{ i.id }}</td>
                     <td>{{ i.displayName }}</td>
