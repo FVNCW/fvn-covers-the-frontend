@@ -35,8 +35,12 @@ function removeAt(i: number) {
 <template>
     <div>
         <template v-for="(item, i) in items" :key="i">
-            <input :type="type === 'number' ? 'number' : 'text'" :value="item"
-                @input="changeAt(i, ($event.target as HTMLInputElement).value)" size="16" />
+            <input
+                :type="type === 'number' ? 'number' : 'text'"
+                :value="item"
+                @input="changeAt(i, ($event.target as HTMLInputElement).value)"
+                size="16"
+            />
             <button @click="removeAt(i)">删除</button>
             <br />
         </template>

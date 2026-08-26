@@ -88,7 +88,9 @@ onMounted(refreshLists);
         <ObjectUploader v-model="objFile" />
         <button @click="modifyObject">修改对象</button>
         <button @click="deleteObject">删除对象</button>
-        <div v-if="objInfo">id={{ objInfo.id }} hash={{ objInfo.hash }} uploader={{ objInfo.uploader }}</div>
+        <div v-if="objInfo">
+            id={{ objInfo.id }} hash={{ objInfo.hash }} uploader={{ objInfo.uploader }}
+        </div>
         <img v-if="objPreviewSrc" class="obj-preview" :src="objPreviewSrc" alt="对象图片" />
         <p>{{ notice }}</p>
 
@@ -115,7 +117,15 @@ onMounted(refreshLists);
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="o in objects" :key="o.id" class="clickable" @click="objId = o.id; illObjectId = o.id">
+                <tr
+                    v-for="o in objects"
+                    :key="o.id"
+                    class="clickable"
+                    @click="
+                        objId = o.id;
+                        illObjectId = o.id;
+                    "
+                >
                     <td>{{ o.id }}</td>
                     <td>{{ o.hash }}</td>
                     <td>{{ o.uploader }}</td>
@@ -135,7 +145,12 @@ onMounted(refreshLists);
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="i in illustrations" :key="i.id" class="clickable" @click="objId = i.objectId">
+                <tr
+                    v-for="i in illustrations"
+                    :key="i.id"
+                    class="clickable"
+                    @click="objId = i.objectId"
+                >
                     <td>{{ i.id }}</td>
                     <td>{{ i.displayName }}</td>
                     <td>{{ i.objectId }}</td>

@@ -76,67 +76,69 @@ export const api = {
         return await read<Character>(r);
     },
     characterList: () =>
-        authorizableFetch("/api/character/list", "GET", null, false).then(
-            (r) => read<Character[]>(r),
+        authorizableFetch("/api/character/list", "GET", null, false).then((r) =>
+            read<Character[]>(r),
         ),
     specyList: () =>
         authorizableFetch("/api/specy/list", "GET", null, false).then((r) => read<Specy[]>(r)),
     objectList: () =>
-        authorizableFetch("/api/object/list", "GET", null, false).then(
-            (r) => read<TextureObject[]>(r),
+        authorizableFetch("/api/object/list", "GET", null, false).then((r) =>
+            read<TextureObject[]>(r),
         ),
     illustrationList: () =>
-        authorizableFetch("/api/illustration/list", "GET", null, false).then(
-            (r) => read<Illustration[]>(r),
+        authorizableFetch("/api/illustration/list", "GET", null, false).then((r) =>
+            read<Illustration[]>(r),
         ),
     objectInfo: (id: string) =>
-        authorizableFetch(`/api/object/metadata/${encodeURIComponent(id)}`, "GET", null, false)
-            .then((r) => read<TextureObject>(r)),
+        authorizableFetch(
+            `/api/object/metadata/${encodeURIComponent(id)}`,
+            "GET",
+            null,
+            false,
+        ).then((r) => read<TextureObject>(r)),
     tryMix: async (specy: string[]) => {
         const qs = new URLSearchParams();
         specy.forEach((s) => qs.append("specy", s));
         const r = await authorizableFetch(`/api/specy/try-mix?${qs}`, "GET", null, false);
-        return await read<{ a: number; b: number; }[]>(r);
+        return await read<{ a: number; b: number }[]>(r);
     },
     objectUpload: (data: string) =>
-        authorizableFetch("/api/object/upload", "POST", { data }).then(
-            (r) => read<TextureObject>(r),
+        authorizableFetch("/api/object/upload", "POST", { data }).then((r) =>
+            read<TextureObject>(r),
         ),
     objectModify: (id: string, data: string) =>
         authorizableFetch(`/api/object/modify/${encodeURIComponent(id)}`, "PUT", { data }).then(
             (r) => read<TextureObject>(r),
         ),
     objectDelete: (id: string) =>
-        authorizableFetch(`/api/object/delete/${encodeURIComponent(id)}`, "DELETE").then(
-            (r) => read<{ success: boolean; message: string }>(r),
+        authorizableFetch(`/api/object/delete/${encodeURIComponent(id)}`, "DELETE").then((r) =>
+            read<{ success: boolean; message: string }>(r),
         ),
     characterCreate: (body: CharacterCreation) =>
-        authorizableFetch("/api/character/create", "POST", body).then(
-            (r) => read<Character[]>(r),
-        ),
+        authorizableFetch("/api/character/create", "POST", body).then((r) => read<Character[]>(r)),
     characterDelete: (id: number) =>
-        authorizableFetch("/api/character/delete", "DELETE", { id }).then(
-            (r) => read<Character>(r),
+        authorizableFetch("/api/character/delete", "DELETE", { id }).then((r) =>
+            read<Character>(r),
         ),
     illustrationAdd: (
         character: number,
         illustration: { objectId: string; displayName: string; tags: string[] },
     ) =>
-        authorizableFetch("/api/illustration/add", "POST", { character, illustration }).then(
-            (r) => read<Illustration[]>(r),
+        authorizableFetch("/api/illustration/add", "POST", { character, illustration }).then((r) =>
+            read<Illustration[]>(r),
         ),
     illustrationDelete: (id: number) =>
-        authorizableFetch(`/api/illustration/delete/${id}`, "DELETE").then(
-            (r) => read<Illustration>(r),
+        authorizableFetch(`/api/illustration/delete/${id}`, "DELETE").then((r) =>
+            read<Illustration>(r),
         ),
     specyCreate: (parents: number[], displayName: string) =>
-        authorizableFetch("/api/specy/create", "POST", { parents, displayName }).then(
-            (r) => read<Specy[]>(r),
+        authorizableFetch("/api/specy/create", "POST", { parents, displayName }).then((r) =>
+            read<Specy[]>(r),
         ),
     specyDelete: (id: number) =>
         authorizableFetch(`/api/specy/delete/${id}`, "DELETE").then((r) => read<Specy>(r)),
     specyRename: (id: number, displayName: string) =>
-        authorizableFetch(`/api/specy/rename/${id}`, "PATCH", { displayName }).then(
-            (r) => read<Specy>(r),
+        authorizableFetch(`/api/specy/rename/${id}`, "PATCH", { displayName }).then((r) =>
+            read<Specy>(r),
         ),
 };

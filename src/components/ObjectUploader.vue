@@ -20,7 +20,13 @@ function onPreviewError() {
 <template>
     <div class="uploader">
         <input type="file" @change="onChange" accept="image/*" />
-        <img v-if="previewUrl" class="preview" :src="previewUrl" alt="预览" @error="onPreviewError" />
+        <img
+            v-if="previewUrl"
+            class="preview"
+            :src="previewUrl"
+            alt="预览"
+            @error="onPreviewError"
+        />
     </div>
 </template>
 <style scoped>

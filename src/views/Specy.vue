@@ -30,96 +30,98 @@ interface GraphEdge {
     path: string;
 }
 
-const graph = computed<{ nodes: GraphNode[]; edges: GraphEdge[]; width: number; height: number }>(() => {
-    const specyMap = new Map<number, Specy>();
-    specys.value.forEach((s) => specyMap.set(s.id, s));
+const graph = computed<{ nodes: GraphNode[]; edges: GraphEdge[]; width: number; height: number }>(
+    () => {
+        const specyMap = new Map<number, Specy>();
+        specys.value.forEach((s) => specyMap.set(s.id, s));
 
-    // 建立子节点关系，并统计入度
-    const children = new Map<number, number[]>();
-    const inDegree = new Map<number, number>();
-    specys.value.forEach((s) => {
-        children.set(s.id, []);
-        inDegree.set(s.id, 0);
-    });
-    specys.value.forEach((s) => {
-        s.parents.forEach((p) => {
-            if (!specyMap.has(p)) return;
-            children.get(p)!.push(s.id);
-            inDegree.set(s.id, (inDegree.get(s.id) ?? 0) + 1);
+        // 建立子节点关系，并统计入度
+        const children = new Map<number, number[]>();
+        const inDegree = new Map<number, number>();
+        specys.value.forEach((s) => {
+            children.set(s.id, []);
+            inDegree.set(s.id, 0);
         });
-    });
-
-    // 拓扑排序（Kahn）计算每个节点的层级深度
-    const depth = new Map<number, number>();
-    const queue: number[] = [];
-    specys.value.forEach((s) => {
-        if ((inDegree.get(s.id) ?? 0) === 0) {
-            depth.set(s.id, 0);
-            queue.push(s.id);
-        }
-    });
-    while (queue.length) {
-        const id = queue.shift()!;
-        const d = depth.get(id) ?? 0;
-        (children.get(id) ?? []).forEach((c) => {
-            depth.set(c, Math.max(depth.get(c) ?? 0, d + 1));
-            inDegree.set(c, (inDegree.get(c) ?? 0) - 1);
-            if (inDegree.get(c) === 0) queue.push(c);
-        });
-    }
-
-    // 按深度分列（每列内的节点按 id 排序，保证稳定布局）
-    const levels = new Map<number, number[]>();
-    specys.value.forEach((s) => {
-        const d = depth.get(s.id) ?? 0;
-        if (!levels.has(d)) levels.set(d, []);
-        levels.get(d)!.push(s.id);
-    });
-    levels.forEach((ids) => ids.sort((a, b) => a - b));
-
-    const maxDepth = specys.value.length ? Math.max(...depth.values()) : 0;
-    const maxLevelCount = Math.max(1, ...Array.from(levels.values(), (l) => l.length));
-    const width = (maxLevelCount - 1) * COL_SPACING + PAD_X * 2;
-    const height = maxDepth * ROW_SPACING + PAD_Y * 2;
-
-    // 计算每个节点中心坐标（每行整体居中）
-    const positions = new Map<number, { x: number; y: number }>();
-    levels.forEach((ids, d) => {
-        const span = (ids.length - 1) * COL_SPACING;
-        const startX = (width - span) / 2;
-        ids.forEach((id, i) => {
-            positions.set(id, { x: startX + i * COL_SPACING, y: PAD_Y + d * ROW_SPACING });
-        });
-    });
-
-    const nodes: GraphNode[] = specys.value.map((s) => {
-        const p = positions.get(s.id) ?? { x: PAD_X, y: PAD_Y };
-        return { specy: s, left: p.x - NODE_WIDTH / 2, top: p.y - NODE_HEIGHT / 2 };
-    });
-
-    // 父节点底部中心 -> 子节点顶部中心 的三次贝塞尔曲线
-    const edges: GraphEdge[] = [];
-    specys.value.forEach((s) => {
-        const to = positions.get(s.id);
-        if (!to) return;
-        s.parents.forEach((p) => {
-            const from = positions.get(p);
-            if (!from) return;
-            const x1 = from.x;
-            const y1 = from.y + NODE_HEIGHT / 2;
-            const x2 = to.x;
-            const y2 = to.y - NODE_HEIGHT / 2 - 8;
-            const dy = y2 - y1;
-            edges.push({
-                path:
-                    `M ${x1} ${y1} C ${x1} ${y1 + dy * 0.5}, ` +
-                    `${x2} ${y2 - dy * 0.5}, ${x2} ${y2}`,
+        specys.value.forEach((s) => {
+            s.parents.forEach((p) => {
+                if (!specyMap.has(p)) return;
+                children.get(p)!.push(s.id);
+                inDegree.set(s.id, (inDegree.get(s.id) ?? 0) + 1);
             });
         });
-    });
 
-    return { nodes, edges, width, height };
-});
+        // 拓扑排序（Kahn）计算每个节点的层级深度
+        const depth = new Map<number, number>();
+        const queue: number[] = [];
+        specys.value.forEach((s) => {
+            if ((inDegree.get(s.id) ?? 0) === 0) {
+                depth.set(s.id, 0);
+                queue.push(s.id);
+            }
+        });
+        while (queue.length) {
+            const id = queue.shift()!;
+            const d = depth.get(id) ?? 0;
+            (children.get(id) ?? []).forEach((c) => {
+                depth.set(c, Math.max(depth.get(c) ?? 0, d + 1));
+                inDegree.set(c, (inDegree.get(c) ?? 0) - 1);
+                if (inDegree.get(c) === 0) queue.push(c);
+            });
+        }
+
+        // 按深度分列（每列内的节点按 id 排序，保证稳定布局）
+        const levels = new Map<number, number[]>();
+        specys.value.forEach((s) => {
+            const d = depth.get(s.id) ?? 0;
+            if (!levels.has(d)) levels.set(d, []);
+            levels.get(d)!.push(s.id);
+        });
+        levels.forEach((ids) => ids.sort((a, b) => a - b));
+
+        const maxDepth = specys.value.length ? Math.max(...depth.values()) : 0;
+        const maxLevelCount = Math.max(1, ...Array.from(levels.values(), (l) => l.length));
+        const width = (maxLevelCount - 1) * COL_SPACING + PAD_X * 2;
+        const height = maxDepth * ROW_SPACING + PAD_Y * 2;
+
+        // 计算每个节点中心坐标（每行整体居中）
+        const positions = new Map<number, { x: number; y: number }>();
+        levels.forEach((ids, d) => {
+            const span = (ids.length - 1) * COL_SPACING;
+            const startX = (width - span) / 2;
+            ids.forEach((id, i) => {
+                positions.set(id, { x: startX + i * COL_SPACING, y: PAD_Y + d * ROW_SPACING });
+            });
+        });
+
+        const nodes: GraphNode[] = specys.value.map((s) => {
+            const p = positions.get(s.id) ?? { x: PAD_X, y: PAD_Y };
+            return { specy: s, left: p.x - NODE_WIDTH / 2, top: p.y - NODE_HEIGHT / 2 };
+        });
+
+        // 父节点底部中心 -> 子节点顶部中心 的三次贝塞尔曲线
+        const edges: GraphEdge[] = [];
+        specys.value.forEach((s) => {
+            const to = positions.get(s.id);
+            if (!to) return;
+            s.parents.forEach((p) => {
+                const from = positions.get(p);
+                if (!from) return;
+                const x1 = from.x;
+                const y1 = from.y + NODE_HEIGHT / 2;
+                const x2 = to.x;
+                const y2 = to.y - NODE_HEIGHT / 2 - 8;
+                const dy = y2 - y1;
+                edges.push({
+                    path:
+                        `M ${x1} ${y1} C ${x1} ${y1 + dy * 0.5}, ` +
+                        `${x2} ${y2 - dy * 0.5}, ${x2} ${y2}`,
+                });
+            });
+        });
+
+        return { nodes, edges, width, height };
+    },
+);
 
 const graphStyle = computed(() => ({
     width: `${graph.value.width}px`,
@@ -176,9 +178,7 @@ async function rename() {
 }
 async function remove() {
     if (!selected.value.length) return;
-    const names = selected.value
-        .map((s) => `#${s.id}（${s.displayName}）`)
-        .join("、");
+    const names = selected.value.map((s) => `#${s.id}（${s.displayName}）`).join("、");
     if (!confirm(`确定删除节点 ${names} 吗？`)) return;
     try {
         for (const s of selected.value) await api.specyDelete(s.id);
@@ -206,7 +206,8 @@ onMounted(async () => {
     <div>
         <h2>创建物种</h2>
         <label>名字 <input v-model="displayName" /></label><br />
-        <div>父物种ID(空为根)
+        <div>
+            父物种ID(空为根)
             <ArrayEditor v-model="parents" type="number" />
         </div>
         <button @click="create">创建</button>
@@ -216,20 +217,38 @@ onMounted(async () => {
             <div class="graph" :style="graphStyle">
                 <svg class="edges" :viewBox="viewBox">
                     <defs>
-                        <marker id="specy-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7"
-                            orient="auto-start-reverse">
+                        <marker
+                            id="specy-arrow"
+                            viewBox="0 0 10 10"
+                            refX="8"
+                            refY="5"
+                            markerWidth="7"
+                            markerHeight="7"
+                            orient="auto-start-reverse"
+                        >
                             <path d="M 0 0 L 10 5 L 0 10 z" fill="#aab3c5" />
                         </marker>
                     </defs>
-                    <path v-for="(e, i) in graph.edges" :key="i" :d="e.path" fill="none" stroke="#aab3c5"
-                        stroke-width="1.5" marker-end="url(#specy-arrow)" />
+                    <path
+                        v-for="(e, i) in graph.edges"
+                        :key="i"
+                        :d="e.path"
+                        fill="none"
+                        stroke="#aab3c5"
+                        stroke-width="1.5"
+                        marker-end="url(#specy-arrow)"
+                    />
                 </svg>
                 <div class="nodes">
-                    <div v-for="n in graph.nodes" :key="n.specy.id" class="node"
+                    <div
+                        v-for="n in graph.nodes"
+                        :key="n.specy.id"
+                        class="node"
                         :class="{ active: selected.some((x) => x.id === n.specy.id) }"
                         :style="{ left: n.left + 'px', top: n.top + 'px' }"
                         :title="`ID ${n.specy.id} · 父物种 ${n.specy.parents.join('、') || '无'}`"
-                        @click="selectNode(n, $event)">
+                        @click="selectNode(n, $event)"
+                    >
                         <span class="node-id">#{{ n.specy.id }}</span>
                         <span class="node-name">{{ n.specy.displayName }}</span>
                     </div>
@@ -240,29 +259,32 @@ onMounted(async () => {
 
         <h2>节点操作</h2>
         <template v-if="selected.length">
-            <p>已选中 {{ selected.length }} 个节点：
+            <p>
+                已选中 {{ selected.length }} 个节点：
                 <span v-for="(s, i) in selected" :key="s.id">
-                    #{{ s.id }}（{{ s.displayName }}）{{ i < selected.length - 1 ? "、" : "" }} </span>
+                    #{{ s.id }}（{{ s.displayName }}）{{ i < selected.length - 1 ? "、" : "" }}
+                </span>
             </p>
             <template v-if="selected.length === 1">
                 <label>新名字 <input v-model="editName" @keyup.enter="rename" /></label>
                 <button @click="rename">重命名</button>
             </template>
-            <button @click="remove">删除节点{{ selected.length > 1 ? `（${selected.length}）` : "" }}</button>
+            <button @click="remove">
+                删除节点{{ selected.length > 1 ? `（${selected.length}）` : "" }}
+            </button>
             <button @click="setAsParent">设为父节点</button>
         </template>
         <p v-else>点击图谱中的节点以编辑或删除（按住 Shift 可多选）</p>
 
         <h2>检测混血</h2>
-        <div>物种ID
+        <div>
+            物种ID
             <ArrayEditor v-model="mixInput" type="number" />
         </div>
         <button @click="checkMix">检测</button>
         <div v-if="mixResult">
             可混血配对：
-            <span v-for="(p, i) in mixResult" :key="i">
-                [{{ p.a }}, {{ p.b }}]
-            </span>
+            <span v-for="(p, i) in mixResult" :key="i"> [{{ p.a }}, {{ p.b }}] </span>
         </div>
         <p>{{ notice }}</p>
     </div>
