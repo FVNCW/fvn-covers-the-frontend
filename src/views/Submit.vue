@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import ArrayEditor from "@/components/ArrayEditor.vue";
+import ColorListEditor from "@/components/ColorListEditor.vue";
 import ContentSelector from "@/components/ContentSelector.vue";
 import ObjectUploader from "@/components/ObjectUploader.vue";
 import { api, type Character, type Specy, type TextureObject } from "@/engine/api";
@@ -47,8 +48,8 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
         b: parseInt(h.slice(4, 6), 16),
     } as { r: number; g: number; b: number };
 }
-const furColor = ref("#66ccff");
-const eyeColor = ref("#cc2222");
+const furColors = ref<string[]>(["#66ccff"]);
+const eyeColors = ref<string[]>(["#cc2222"]);
 const relParents = ref<Character[]>([]);
 const relFriends = ref<Character[]>([]);
 const relChildren = ref<Character[]>([]);
@@ -60,12 +61,11 @@ const canCreate = computed(() => {
 });
 
 async function createCharacter() {
-    const specy =
-        specyMode.value === "mixed"
-            ? specyMixed.value.map((s) => s.id)
-            : (specyPure.value?.id ?? 0);
-    const fur = hexToRgb(furColor.value);
-    const eye = hexToRgb(eyeColor.value);
+    const specy = specyMode.value === "mixed"
+        ? specyMixed.value.map((s) => s.id)
+        : (specyPure.value?.id ?? 0);
+    const fur = furColors.value.map(hexToRgb);
+    const eye = eyeColors.value.map(hexToRgb);
     await api.characterCreate({
         tags: tags.value,
         displayName: displayName.value,
@@ -81,8 +81,8 @@ async function createCharacter() {
         height: height.value,
         length: length.value,
         color: {
-            fur: [{ ...fur }],
-            eye: [{ ...eye }],
+            fur,
+            eye,
             other: {},
         },
         relationShips: {
@@ -110,8 +110,8 @@ function resetForm() {
     specyMixed.value = [];
     height.value = 0;
     length.value = 0;
-    furColor.value = "#66ccff";
-    eyeColor.value = "#cc2222";
+    furColors.value = ["#66ccff"];
+    eyeColors.value = ["#cc2222"];
     relParents.value = [];
     relFriends.value = [];
     relChildren.value = [];
@@ -175,10 +175,10 @@ function resetForm() {
                     </n-form-item>
                 </n-space>
                 <n-form-item label="毛发颜色">
-                    <n-color-picker v-model:value="furColor" :show-alpha="false" />
+                    <ColorListEditor v-model="furColors" />
                 </n-form-item>
                 <n-form-item label="瞳孔颜色">
-                    <n-color-picker v-model:value="eyeColor" :show-alpha="false" />
+                    <ColorListEditor v-model="eyeColors" />
                 </n-form-item>
                 <n-form-item label="父母">
                     <ContentSelector v-model:selected="relParents" type="character" multiple />
