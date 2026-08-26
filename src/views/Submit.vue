@@ -118,8 +118,7 @@ function resetForm() {
 }
 </script>
 <template>
-    <n-space vertical size="large" style="max-width: 720px">
-        <n-card title="上传对象" size="small">
+    <n-space vertical size="large" justify="center" align="center" style="max-width: 720px; margin: 0 auto"><n-card title="上传对象" size="small" style="width: 100%">
             <n-space vertical>
                 <ObjectUploader v-model="file" />
                 <n-button type="primary" @click="uploadObject">上传</n-button>
@@ -127,7 +126,7 @@ function resetForm() {
             </n-space>
         </n-card>
 
-        <n-card title="创建角色" size="small">
+        <n-card title="创建角色" size="small" style="width: 100%">
             <n-space vertical>
                 <n-form-item label="名字">
                     <n-input v-model:value="displayName" placeholder="输入角色名字" />

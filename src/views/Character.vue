@@ -77,7 +77,7 @@ onMounted(async () => {
 	<div>
 		<n-text type="error">{{ error }}</n-text>
 		<template v-if="character">
-			<n-card title="角色详情" size="small" style="max-width: 720px">
+			<n-card title="角色详情" size="small" style="max-width: 720px; margin: 0 auto">
 				<n-descriptions label-placement="left" :column="1" bordered>
 					<n-descriptions-item label="ID">#{{ character.id }}</n-descriptions-item>
 					<n-descriptions-item label="名字">{{ character.displayName }}</n-descriptions-item>

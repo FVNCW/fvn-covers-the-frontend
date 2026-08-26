@@ -126,8 +126,8 @@ function illustrationRowProps(row: Illustration) {
 }
 </script>
 <template>
-    <n-space vertical size="large">
-        <n-card title="对象管理" size="small">
+    <n-space vertical size="large" justify="center" align="center">
+        <n-card title="对象管理" size="small" style="width: 100%">
             <n-space vertical>
                 <ContentSelector v-model="obj" type="object" />
                 <n-space>
@@ -144,7 +144,7 @@ function illustrationRowProps(row: Illustration) {
             </n-space>
         </n-card>
 
-        <n-card title="添加立绘" size="small">
+        <n-card title="添加立绘" size="small" style="width: 100%">
             <n-space vertical>
                 <n-form-item label="角色">
                     <ContentSelector v-model="character" type="character" />
@@ -162,14 +162,14 @@ function illustrationRowProps(row: Illustration) {
             </n-space>
         </n-card>
 
-        <n-card title="删除立绘" size="small">
+        <n-card title="删除立绘" size="small" style="width: 100%">
             <n-space>
                 <ContentSelector v-model="illDelete" type="illustration" />
                 <n-button type="error" @click="deleteIllustration">删除</n-button>
             </n-space>
         </n-card>
 
-        <n-card title="对象列表" size="small">
+        <n-card title="对象列表" size="small" style="width: 100%">
             <n-data-table
                 :columns="objectColumns"
                 :data="objects"
@@ -179,7 +179,7 @@ function illustrationRowProps(row: Illustration) {
             <n-text v-if="!objects.length && !listNotice">暂无对象</n-text>
         </n-card>
 
-        <n-card title="立绘列表" size="small">
+        <n-card title="立绘列表" size="small" style="width: 100%">
             <n-data-table
                 :columns="illustrationColumns"
                 :data="illustrations"

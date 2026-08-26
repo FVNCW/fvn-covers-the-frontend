@@ -208,8 +208,8 @@ onMounted(async () => {
 });
 </script>
 <template>
-	<n-space vertical size="large">
-		<n-card title="创建物种" size="small">
+	<n-space vertical size="large" justify="center" align="center">
+		<n-card title="创建物种" size="small" style="width: 100%">
 			<n-space vertical>
 				<n-form-item label="名字">
 					<n-input v-model:value="displayName" placeholder="输入物种名字" />
@@ -221,7 +221,7 @@ onMounted(async () => {
 			</n-space>
 		</n-card>
 
-		<n-card title="物种图谱" size="small">
+		<n-card title="物种图谱" size="small" style="width: 100%">
 			<div v-if="graph.nodes.length" class="graph-scroll">
 				<div class="graph" :style="graphStyle">
 					<svg class="edges" :viewBox="viewBox">
@@ -249,7 +249,7 @@ onMounted(async () => {
 			<n-text v-else>暂无物种</n-text>
 		</n-card>
 
-		<n-card title="节点操作" size="small">
+		<n-card title="节点操作" size="small" style="width: 100%">
 			<template v-if="selected.length">
 				<n-text style="display: block; margin-bottom: 8px">
 					已选中 {{ selected.length }} 个节点：
@@ -274,7 +274,7 @@ onMounted(async () => {
 			<n-text v-else>点击图谱中的节点以编辑或删除（按住 Shift 可多选）</n-text>
 		</n-card>
 
-		<n-card title="检测混血" size="small">
+		<n-card title="检测混血" size="small" style="width: 100%">
 			<n-space vertical>
 				<n-form-item label="物种">
 					<ContentSelector v-model:selected="mixInput" type="specy" multiple />
