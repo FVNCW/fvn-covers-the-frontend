@@ -65,6 +65,38 @@ export interface TextureObject {
     hash: string;
     uploader: string;
 }
+export type ContentType = "character" | "object" | "illustration" | "specy";
+export type FieldType = "string&array" | "number" | "color";
+export interface StringArrayFilter {
+    mode: "equal" | "include";
+    value: string;
+}
+export interface NumberFilter {
+    mode: "inRange" | "closet";
+    pattern?: { a: number; b: number };
+}
+export interface ColorFilter {
+    target: string;
+    allowOffset: string;
+}
+export interface FieldFilter {
+    key: string | null;
+    "string&array"?: StringArrayFilter;
+    number?: NumberFilter;
+    color?: ColorFilter;
+}
+export interface EqualCondition {
+    type: "equal";
+    filter: FieldFilter;
+    fieldType: FieldType[];
+}
+export interface ComposeCondition {
+    type: "compose";
+    composeType: "and" | "or";
+    filters: AnyCondition[];
+    fieldType: FieldType[];
+}
+export type AnyCondition = EqualCondition | ComposeCondition;
 async function read<T>(res: Response): Promise<T> {
     if (!res.ok) throw new Error(await res.text());
     return (await res.json()) as T;
@@ -140,5 +172,9 @@ export const api = {
     specyRename: (id: number, displayName: string) =>
         authorizableFetch(`/api/specy/rename/${id}`, "PATCH", { displayName }).then((r) =>
             read<Specy>(r),
+        ),
+    search: (type: ContentType, condition: AnyCondition) =>
+        authorizableFetch("/api/search", "POST", { type, condition }).then(
+            (r) => read<(Character | TextureObject | Illustration | Specy)[]>(r),
         ),
 };
