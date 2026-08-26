@@ -111,6 +111,10 @@ export const api = {
         authorizableFetch("/api/character/list", "GET", null, false).then((r) =>
             read<Character[]>(r),
         ),
+    characterData: (id: number) =>
+        authorizableFetch(`/api/character/data/${id}`, "GET", null, false).then((r) =>
+            read<Character>(r),
+        ),
     specyList: () =>
         authorizableFetch("/api/specy/list", "GET", null, false).then((r) => read<Specy[]>(r)),
     objectList: () =>

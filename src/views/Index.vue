@@ -14,6 +14,11 @@ async function refresh() {
     characters.value = await api.characterList();
     specys.value = await api.specyList();
 }
+async function signOut() {
+    await auth.signOut();
+    session.value = null;
+    sessionLoading.value = false;
+}
 async function deleteCharacter(id: number) {
     try {
         await api.characterDelete(id);
@@ -39,7 +44,7 @@ onMounted(async () => {
                 <button @click="router.push('/submit')">投稿</button>
                 <button @click="router.push('/specy')">物种管理</button>
                 <button @click="router.push('/illustration')">立绘/对象</button>
-                <button @click="auth.signOut()">退出登录</button>
+                <button @click="signOut()">退出登录</button>
             </template>
             <template v-else>
                 <button @click="router.push('/register')">注册</button>
@@ -72,12 +77,14 @@ onMounted(async () => {
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="c in characters" :key="c.id">
+                <tr v-for="c in characters" :key="c.id" class="row" @click="router.push(`/character/${c.id}`)">
                     <td>{{ c.id }}</td>
                     <td>{{ c.displayName }}</td>
                     <td>{{ c.height }}</td>
                     <td>{{ c.isFemale ? "女性" : "男性" }}</td>
-                    <td><button @click="deleteCharacter(c.id)">删除</button></td>
+                    <td>
+                        <button @click.stop="deleteCharacter(c.id)">删除</button>
+                    </td>
                 </tr>
             </tbody>
         </table>
@@ -101,3 +108,11 @@ onMounted(async () => {
         </table>
     </div>
 </template>
+<style scoped>
+.row {
+    cursor: pointer;
+}
+.row:hover {
+    background: #f4f7ff;
+}
+</style>

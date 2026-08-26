@@ -194,6 +194,11 @@ function setAsParent() {
 	parents.value = [...selected.value];
 	notice.value = "已将选中的节点设为父节点";
 }
+function sendToMix() {
+	if (selected.value.length < 2) return;
+	mixInput.value = [...selected.value];
+	notice.value = "已将选中的节点填入混血检测";
+}
 async function checkMix() {
 	mixResult.value = await api.tryMix(mixInput.value.map((s) => String(s.id)));
 }
@@ -254,6 +259,7 @@ onMounted(async () => {
 				删除节点{{ selected.length > 1 ? `（${selected.length}）` : "" }}
 			</button>
 			<button @click="setAsParent">设为父节点</button>
+			<button v-if="selected.length >= 2" @click="sendToMix">混血可行性检测</button>
 		</template>
 		<p v-else>点击图谱中的节点以编辑或删除（按住 Shift 可多选）</p>
 
