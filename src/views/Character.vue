@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import { api, type Character, type Illustration, type Specy } from "@/engine/api";
 import { apiBase } from "@/engine/util/api";
+import CharacterCard from "@/components/CharacterCard.vue";
 
 const route = useRoute();
 const character = ref<Character | null>(null);
@@ -77,6 +78,9 @@ onMounted(async () => {
 	<div>
 		<n-text type="error">{{ error }}</n-text>
 		<template v-if="character">
+			<div style="display: flex; justify-content: center; margin-bottom: 24px">
+				<CharacterCard :id="character.id" />
+			</div>
 			<n-card title="角色详情" size="small" style="max-width: 720px; margin: 0 auto">
 				<n-descriptions label-placement="left" :column="1" bordered>
 					<n-descriptions-item label="ID">#{{ character.id }}</n-descriptions-item>
