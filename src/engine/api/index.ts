@@ -53,6 +53,7 @@ export interface Specy {
     id: number;
     displayName: string;
     parents: number[];
+    conflictWith: number[];
 }
 export interface Illustration {
     id: number;
@@ -136,7 +137,7 @@ export const api = {
         const qs = new URLSearchParams();
         specy.forEach((s) => qs.append("specy", s));
         const r = await authorizableFetch(`/api/specy/try-mix?${qs}`, "GET", null, false);
-        return await read<{ a: number; b: number }[]>(r);
+        return await read<{ a: Specy; b: Specy }[]>(r);
     },
     objectUpload: (data: string) =>
         authorizableFetch("/api/object/upload", "POST", { data }).then((r) =>
@@ -167,9 +168,9 @@ export const api = {
         authorizableFetch(`/api/illustration/delete/${id}`, "DELETE").then((r) =>
             read<Illustration>(r),
         ),
-    specyCreate: (parents: number[], displayName: string) =>
-        authorizableFetch("/api/specy/create", "POST", { parents, displayName }).then((r) =>
-            read<Specy[]>(r),
+    specyCreate: (parents: number[], displayName: string, conflictWith: number[]) =>
+        authorizableFetch("/api/specy/create", "POST", { parents, displayName, conflictWith }).then(
+            (r) => read<Specy[]>(r),
         ),
     specyDelete: (id: number) =>
         authorizableFetch(`/api/specy/delete/${id}`, "DELETE").then((r) => read<Specy>(r)),

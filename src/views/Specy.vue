@@ -5,11 +5,12 @@ import { api, type Specy } from "@/engine/api";
 
 const displayName = ref("");
 const parents = ref<Specy[]>([]);
+const conflictWith = ref<Specy[]>([]);
 const specys = ref<Specy[]>([]);
 const notice = ref("");
 
 const mixInput = ref<Specy[]>([]);
-const mixResult = ref<{ a: number; b: number }[] | null>(null);
+const mixResult = ref<{ a: Specy; b: Specy }[] | null>(null);
 
 const selected = ref<Specy[]>([]);
 const editName = ref("");
@@ -132,10 +133,15 @@ const viewBox = computed(() => `0 0 ${graph.value.width} ${graph.value.height}`)
 
 async function create() {
 	try {
-		await api.specyCreate(parents.value.map((s) => s.id), displayName.value);
+		await api.specyCreate(
+			parents.value.map((s) => s.id),
+			displayName.value,
+			conflictWith.value.map((s) => s.id),
+		);
 		notice.value = "已创建";
 		displayName.value = "";
 		parents.value = [];
+		conflictWith.value = [];
 		specys.value = await api.specyList();
 	} catch (e) {
 		notice.value = String(e);
@@ -217,6 +223,9 @@ onMounted(async () => {
 				<n-form-item label="父物种（空为根）">
 					<ContentSelector v-model:selected="parents" type="specy" multiple />
 				</n-form-item>
+				<n-form-item label="混血冲突物种">
+					<ContentSelector v-model:selected="conflictWith" type="specy" multiple />
+				</n-form-item>
 				<n-button type="primary" @click="create">创建</n-button>
 			</n-space>
 		</n-card>
@@ -238,7 +247,7 @@ onMounted(async () => {
 						<div v-for="n in graph.nodes" :key="n.specy.id" class="node"
 							:class="{ active: selected.some((x) => x.id === n.specy.id) }"
 							:style="{ left: n.left + 'px', top: n.top + 'px' }"
-							:title="`ID ${n.specy.id} · 父物种 ${n.specy.parents.join('、') || '无'}`"
+							:title="`ID ${n.specy.id} · 父物种 ${n.specy.parents.join('、') || '无'} · 冲突 ${n.specy.conflictWith.join('、') || '无'}`"
 							@click="selectNode(n, $event)">
 							<span class="node-id">#{{ n.specy.id }}</span>
 							<span class="node-name">{{ n.specy.displayName }}</span>
@@ -281,8 +290,13 @@ onMounted(async () => {
 				</n-form-item>
 				<n-button type="primary" @click="checkMix">检测</n-button>
 				<n-text v-if="mixResult">
-					可混血配对：
-					<span v-for="(p, i) in mixResult" :key="i"> [{{ p.a }}, {{ p.b }}] </span>
+					<template v-if="mixResult.length">
+						混血冲突配对：
+						<span v-for="(p, i) in mixResult" :key="i" style="margin-right: 8px">
+							{{ p.a.displayName }} ↔ {{ p.b.displayName }}
+						</span>
+					</template>
+					<template v-else>无冲突，可正常混血</template>
 				</n-text>
 			</n-space>
 		</n-card>
