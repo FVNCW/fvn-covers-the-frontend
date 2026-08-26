@@ -33,17 +33,16 @@ function removeAt(i: number) {
 }
 </script>
 <template>
-    <div>
-        <template v-for="(item, i) in items" :key="i">
-            <input
+    <div style="display: flex; flex-direction: column; gap: 8px">
+        <div v-for="(item, i) in items" :key="i" style="display: flex; gap: 8px; align-items: center">
+            <n-input
                 :type="type === 'number' ? 'number' : 'text'"
                 :value="item"
-                @input="changeAt(i, ($event.target as HTMLInputElement).value)"
-                size="16"
+                style="width: 200px"
+                @update:value="changeAt(i, String($event))"
             />
-            <button @click="removeAt(i)">删除</button>
-            <br />
-        </template>
-        <button @click="add">添加</button>
+            <n-button size="small" type="error" quaternary @click="removeAt(i)">删除</n-button>
+        </div>
+        <n-button size="small" @click="add">添加</n-button>
     </div>
 </template>

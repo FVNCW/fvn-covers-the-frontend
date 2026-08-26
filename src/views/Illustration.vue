@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
+import type { DataTableColumns } from "naive-ui";
 import ContentSelector from "@/components/ContentSelector.vue";
 import ObjectUploader from "@/components/ObjectUploader.vue";
 import { api, type Character, type Illustration, type TextureObject } from "@/engine/api";
@@ -90,93 +91,106 @@ async function refreshLists() {
     }
 }
 onMounted(refreshLists);
+
+const objectColumns: DataTableColumns<TextureObject> = [
+    { title: "ID", key: "id" },
+    { title: "哈希", key: "hash" },
+    { title: "上传者", key: "uploader" },
+];
+const illustrationColumns: DataTableColumns<Illustration> = [
+    { title: "ID", key: "id" },
+    { title: "名字", key: "displayName" },
+    { title: "对象ID", key: "objectId" },
+    {
+        title: "标签",
+        key: "tags",
+        render: (row) => row.tags.join("、"),
+    },
+];
+function objectRowProps(row: TextureObject) {
+    return {
+        style: "cursor: pointer",
+        onClick: () => {
+            obj.value = row;
+            illObject.value = row;
+        },
+    };
+}
+function illustrationRowProps(row: Illustration) {
+    return {
+        style: "cursor: pointer",
+        onClick: () => {
+            obj.value = objects.value.find((o) => o.id === row.objectId) ?? null;
+        },
+    };
+}
 </script>
 <template>
-    <div>
-        <h2>对象管理</h2>
-        <ContentSelector v-model="obj" type="object" />
-        <button @click="downloadInfo">查询信息</button>
-        <ObjectUploader v-model="objFile" />
-        <button @click="modifyObject">修改对象</button>
-        <button @click="deleteObject">删除对象</button>
-        <div v-if="objInfo">
-            id={{ objInfo.id }} hash={{ objInfo.hash }} uploader={{ objInfo.uploader }}
-        </div>
-        <img v-if="objPreviewSrc" class="obj-preview" :src="objPreviewSrc" alt="对象图片" />
-        <p>{{ notice }}</p>
+    <n-space vertical size="large">
+        <n-card title="对象管理" size="small">
+            <n-space vertical>
+                <ContentSelector v-model="obj" type="object" />
+                <n-space>
+                    <n-button @click="downloadInfo">查询信息</n-button>
+                    <ObjectUploader v-model="objFile" />
+                    <n-button @click="modifyObject">修改对象</n-button>
+                    <n-button type="error" @click="deleteObject">删除对象</n-button>
+                </n-space>
+                <n-text v-if="objInfo">
+                    id={{ objInfo.id }} hash={{ objInfo.hash }} uploader={{ objInfo.uploader }}
+                </n-text>
+                <img v-if="objPreviewSrc" class="obj-preview" :src="objPreviewSrc" alt="对象图片" />
+                <n-text type="error">{{ notice }}</n-text>
+            </n-space>
+        </n-card>
 
-        <h2>添加立绘</h2>
-        <div>
-            角色
-            <ContentSelector v-model="character" type="character" />
-        </div>
-        <div>
-            对象
-            <ContentSelector v-model="illObject" type="object" />
-        </div>
-        <label>立绘名字 <input v-model="illName" /></label><br />
-        <label>标签(逗号分隔) <input v-model="illTags" /></label><br />
-        <button @click="addIllustration">添加</button>
+        <n-card title="添加立绘" size="small">
+            <n-space vertical>
+                <n-form-item label="角色">
+                    <ContentSelector v-model="character" type="character" />
+                </n-form-item>
+                <n-form-item label="对象">
+                    <ContentSelector v-model="illObject" type="object" />
+                </n-form-item>
+                <n-form-item label="立绘名字">
+                    <n-input v-model:value="illName" placeholder="输入立绘名字" />
+                </n-form-item>
+                <n-form-item label="标签（逗号分隔）">
+                    <n-input v-model:value="illTags" placeholder="如：正装,冬天" />
+                </n-form-item>
+                <n-button type="primary" @click="addIllustration">添加</n-button>
+            </n-space>
+        </n-card>
 
-        <h2>删除立绘</h2>
-        <ContentSelector v-model="illDelete" type="illustration" />
-        <button @click="deleteIllustration">删除</button>
+        <n-card title="删除立绘" size="small">
+            <n-space>
+                <ContentSelector v-model="illDelete" type="illustration" />
+                <n-button type="error" @click="deleteIllustration">删除</n-button>
+            </n-space>
+        </n-card>
 
-        <p>{{ listNotice }}</p>
+        <n-card title="对象列表" size="small">
+            <n-data-table
+                :columns="objectColumns"
+                :data="objects"
+                :row-props="objectRowProps"
+                :bordered="false"
+            />
+            <n-text v-if="!objects.length && !listNotice">暂无对象</n-text>
+        </n-card>
 
-        <h2>对象列表</h2>
-        <table border="1">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>哈希</th>
-                    <th>上传者</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr
-                    v-for="o in objects"
-                    :key="o.id"
-                    class="clickable"
-                    @click="
-                        obj = o;
-                        illObject = o;
-                    "
-                >
-                    <td>{{ o.id }}</td>
-                    <td>{{ o.hash }}</td>
-                    <td>{{ o.uploader }}</td>
-                </tr>
-            </tbody>
-        </table>
-        <p v-if="!objects.length && !listNotice">暂无对象</p>
+        <n-card title="立绘列表" size="small">
+            <n-data-table
+                :columns="illustrationColumns"
+                :data="illustrations"
+                :row-props="illustrationRowProps"
+                :bordered="false"
+            />
+            <n-text v-if="!illustrations.length && !listNotice">暂无立绘</n-text>
+        </n-card>
 
-        <h2>立绘列表</h2>
-        <table border="1">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>名字</th>
-                    <th>对象ID</th>
-                    <th>标签</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr
-                    v-for="i in illustrations"
-                    :key="i.id"
-                    class="clickable"
-                    @click="obj = objects.find((o) => o.id === i.objectId) ?? null"
-                >
-                    <td>{{ i.id }}</td>
-                    <td>{{ i.displayName }}</td>
-                    <td>{{ i.objectId }}</td>
-                    <td>{{ i.tags.join("、") }}</td>
-                </tr>
-            </tbody>
-        </table>
-        <p v-if="!illustrations.length && !listNotice">暂无立绘</p>
-    </div>
+        <n-text type="error">{{ listNotice }}</n-text>
+    </n-space>
 </template>
 <style scoped>
 .obj-preview {

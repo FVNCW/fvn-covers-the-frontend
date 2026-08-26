@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import ArrayEditor from "@/components/ArrayEditor.vue";
 import ContentSelector from "@/components/ContentSelector.vue";
 import ObjectUploader from "@/components/ObjectUploader.vue";
@@ -19,7 +19,7 @@ const file = ref<File | null>(null);
 const uploaded = ref<TextureObject | null>(null);
 
 async function uploadObject() {
-    if (!file.value) return alert("请选择文件");
+    if (!file.value) return window.message?.error("请选择文件");
     const data = await readFileAsBase64(file.value);
     uploaded.value = await api.objectUpload(data);
 }
@@ -38,21 +38,34 @@ const specyPure = ref<Specy | null>(null);
 const specyMixed = ref<Specy[]>([]);
 const height = ref<number>(0);
 const length = ref<number>(0);
-const furR = ref<number>(0);
-const furG = ref<number>(0);
-const furB = ref<number>(0);
-const eyeR = ref<number>(0);
-const eyeG = ref<number>(0);
-const eyeB = ref<number>(0);
+
+function hexToRgb(hex: string): { r: number; g: number; b: number } {
+    const h = hex.replace("#", "");
+    return {
+        r: parseInt(h.slice(0, 2), 16),
+        g: parseInt(h.slice(2, 4), 16),
+        b: parseInt(h.slice(4, 6), 16),
+    } as { r: number; g: number; b: number };
+}
+const furColor = ref("#66ccff");
+const eyeColor = ref("#cc2222");
 const relParents = ref<Character[]>([]);
 const relFriends = ref<Character[]>([]);
 const relChildren = ref<Character[]>([]);
+
+const canCreate = computed(() => {
+    if (!displayName.value.trim()) return false;
+    if (specyMode.value === "pure") return !!specyPure.value?.id;
+    return specyMixed.value.length > 0;
+});
 
 async function createCharacter() {
     const specy =
         specyMode.value === "mixed"
             ? specyMixed.value.map((s) => s.id)
             : (specyPure.value?.id ?? 0);
+    const fur = hexToRgb(furColor.value);
+    const eye = hexToRgb(eyeColor.value);
     await api.characterCreate({
         tags: tags.value,
         displayName: displayName.value,
@@ -68,8 +81,8 @@ async function createCharacter() {
         height: height.value,
         length: length.value,
         color: {
-            fur: [{ r: furR.value, g: furG.value, b: furB.value }],
-            eye: [{ r: eyeR.value, g: eyeG.value, b: eyeB.value }],
+            fur: [{ ...fur }],
+            eye: [{ ...eye }],
             other: {},
         },
         relationShips: {
@@ -79,82 +92,108 @@ async function createCharacter() {
             other: {},
         },
     });
-    alert("创建成功");
+    window.message?.success("创建成功");
+    resetForm();
+}
+
+function resetForm() {
+    displayName.value = "";
+    tags.value = [];
+    isDied.value = false;
+    isFemale.value = false;
+    background.value = "";
+    sources.value = [];
+    personality.value = "";
+    description.value = "";
+    specyMode.value = "pure";
+    specyPure.value = null;
+    specyMixed.value = [];
+    height.value = 0;
+    length.value = 0;
+    furColor.value = "#66ccff";
+    eyeColor.value = "#cc2222";
+    relParents.value = [];
+    relFriends.value = [];
+    relChildren.value = [];
 }
 </script>
 <template>
-    <div>
-        <h2>上传对象</h2>
-        <ObjectUploader v-model="file" />
-        <button @click="uploadObject">上传</button>
-        <div v-if="uploaded">已上传：id={{ uploaded.id }} hash={{ uploaded.hash }}</div>
+    <n-space vertical size="large" style="max-width: 720px">
+        <n-card title="上传对象" size="small">
+            <n-space vertical>
+                <ObjectUploader v-model="file" />
+                <n-button type="primary" @click="uploadObject">上传</n-button>
+                <n-text v-if="uploaded">已上传：id={{ uploaded.id }} hash={{ uploaded.hash }}</n-text>
+            </n-space>
+        </n-card>
 
-        <h2>创建角色</h2>
-        <label>名字 <input v-model="displayName" /></label><br />
-        <div>
-            标签
-            <ArrayEditor v-model="tags" />
-        </div>
-        <label><input type="checkbox" v-model="isDied" /> 已故</label><br />
-        <label><input type="checkbox" v-model="isFemale" /> 女性</label><br />
-        <label
-            >背景故事
-            <textarea v-model="background"></textarea></label
-        ><br />
-        <div>
-            来源作品
-            <ArrayEditor v-model="sources" />
-        </div>
-        <label
-            >人格
-            <textarea v-model="personality"></textarea></label
-        ><br />
-        <label
-            >综合介绍
-            <textarea v-model="description"></textarea></label
-        ><br />
-        <div>
-            <label> <input type="radio" value="pure" v-model="specyMode" /> 纯血种 </label>
-            <label> <input type="radio" value="mixed" v-model="specyMode" /> 混血种 </label>
-        </div>
-        <template v-if="specyMode === 'pure'">
-            <div>
-                纯血种物种
-                <ContentSelector v-model="specyPure" type="specy" />
-            </div>
-        </template>
-        <template v-else>
-            <div>
-                混血种物种
-                <ContentSelector v-model:selected="specyMixed" type="specy" multiple />
-            </div>
-        </template>
-        <label>身高 <input v-model.number="height" type="number" /></label><br />
-        <label>长度 <input v-model.number="length" type="number" /></label><br />
-        <fieldset>
-            <legend>毛发颜色 RGB</legend>
-            <input v-model.number="furR" type="number" />
-            <input v-model.number="furG" type="number" />
-            <input v-model.number="furB" type="number" />
-        </fieldset>
-        <fieldset>
-            <legend>瞳孔颜色 RGB</legend>
-            <input v-model.number="eyeR" type="number" />
-            <input v-model.number="eyeG" type="number" />
-            <input v-model.number="eyeB" type="number" />
-        </fieldset>
-        <div>
-            父母
-            <ContentSelector v-model:selected="relParents" type="character" multiple />
-        </div>
-        <div>
-            朋友
-            <ContentSelector v-model:selected="relFriends" type="character" multiple />
-        </div>
-        <div>
-            孩子
-            <ContentSelector v-model:selected="relChildren" type="character" multiple />
-        </div>
-        <button @click="createCharacter">创建角色</button>
-    </div>
+        <n-card title="创建角色" size="small">
+            <n-space vertical>
+                <n-form-item label="名字">
+                    <n-input v-model:value="displayName" placeholder="输入角色名字" />
+                </n-form-item>
+                <n-form-item label="标签">
+                    <ArrayEditor v-model="tags" />
+                </n-form-item>
+                <n-space>
+                    <n-checkbox v-model:checked="isDied">已故</n-checkbox>
+                    <n-checkbox v-model:checked="isFemale">女性</n-checkbox>
+                </n-space>
+                <n-form-item label="背景故事">
+                    <n-input v-model:value="background" type="textarea" placeholder="输入背景故事" />
+                </n-form-item>
+                <n-form-item label="来源作品">
+                    <ArrayEditor v-model="sources" />
+                </n-form-item>
+                <n-form-item label="人格">
+                    <n-input v-model:value="personality" type="textarea" placeholder="输入人格" />
+                </n-form-item>
+                <n-form-item label="综合介绍">
+                    <n-input v-model:value="description" type="textarea" placeholder="输入综合介绍" />
+                </n-form-item>
+                <n-form-item label="物种类型">
+                    <n-radio-group v-model:value="specyMode">
+                        <n-radio value="pure">纯血种</n-radio>
+                        <n-radio value="mixed">混血种</n-radio>
+                    </n-radio-group>
+                </n-form-item>
+                <template v-if="specyMode === 'pure'">
+                    <n-form-item label="纯血种物种">
+                        <ContentSelector v-model="specyPure" type="specy" />
+                    </n-form-item>
+                </template>
+                <template v-else>
+                    <n-form-item label="混血种物种">
+                        <ContentSelector v-model:selected="specyMixed" type="specy" multiple />
+                    </n-form-item>
+                </template>
+                <n-space>
+                    <n-form-item label="身高">
+                        <n-input-number v-model:value="height" :min="0" />
+                    </n-form-item>
+                    <n-form-item label="长度">
+                        <n-input-number v-model:value="length" :min="0" />
+                    </n-form-item>
+                </n-space>
+                <n-form-item label="毛发颜色">
+                    <n-color-picker v-model:value="furColor" :show-alpha="false" />
+                </n-form-item>
+                <n-form-item label="瞳孔颜色">
+                    <n-color-picker v-model:value="eyeColor" :show-alpha="false" />
+                </n-form-item>
+                <n-form-item label="父母">
+                    <ContentSelector v-model:selected="relParents" type="character" multiple />
+                </n-form-item>
+                <n-form-item label="朋友">
+                    <ContentSelector v-model:selected="relFriends" type="character" multiple />
+                </n-form-item>
+                <n-form-item label="孩子">
+                    <ContentSelector v-model:selected="relChildren" type="character" multiple />
+                </n-form-item>
+                <n-button type="primary" :disabled="!canCreate" @click="createCharacter">
+                    创建角色
+                </n-button>
+            </n-space>
+        </n-card>
+    </n-space>
 </template>

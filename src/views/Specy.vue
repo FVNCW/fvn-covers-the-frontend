@@ -208,73 +208,86 @@ onMounted(async () => {
 });
 </script>
 <template>
-	<div>
-		<h2>创建物种</h2>
-		<label>名字 <input v-model="displayName" /></label><br />
-		<div>
-			父物种（空为根）
-			<ContentSelector v-model:selected="parents" type="specy" multiple />
-		</div>
-		<button @click="create">创建</button>
+	<n-space vertical size="large">
+		<n-card title="创建物种" size="small">
+			<n-space vertical>
+				<n-form-item label="名字">
+					<n-input v-model:value="displayName" placeholder="输入物种名字" />
+				</n-form-item>
+				<n-form-item label="父物种（空为根）">
+					<ContentSelector v-model:selected="parents" type="specy" multiple />
+				</n-form-item>
+				<n-button type="primary" @click="create">创建</n-button>
+			</n-space>
+		</n-card>
 
-		<h2>物种图谱</h2>
-		<div v-if="graph.nodes.length" class="graph-scroll">
-			<div class="graph" :style="graphStyle">
-				<svg class="edges" :viewBox="viewBox">
-					<defs>
-						<marker id="specy-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7"
-							orient="auto-start-reverse">
-							<path d="M 0 0 L 10 5 L 0 10 z" fill="#aab3c5" />
-						</marker>
-					</defs>
-					<path v-for="(e, i) in graph.edges" :key="i" :d="e.path" fill="none" stroke="#aab3c5"
-						stroke-width="1.5" marker-end="url(#specy-arrow)" />
-				</svg>
-				<div class="nodes">
-					<div v-for="n in graph.nodes" :key="n.specy.id" class="node"
-						:class="{ active: selected.some((x) => x.id === n.specy.id) }"
-						:style="{ left: n.left + 'px', top: n.top + 'px' }"
-						:title="`ID ${n.specy.id} · 父物种 ${n.specy.parents.join('、') || '无'}`"
-						@click="selectNode(n, $event)">
-						<span class="node-id">#{{ n.specy.id }}</span>
-						<span class="node-name">{{ n.specy.displayName }}</span>
+		<n-card title="物种图谱" size="small">
+			<div v-if="graph.nodes.length" class="graph-scroll">
+				<div class="graph" :style="graphStyle">
+					<svg class="edges" :viewBox="viewBox">
+						<defs>
+							<marker id="specy-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7"
+								markerHeight="7" orient="auto-start-reverse">
+								<path d="M 0 0 L 10 5 L 0 10 z" fill="#aab3c5" />
+							</marker>
+						</defs>
+						<path v-for="(e, i) in graph.edges" :key="i" :d="e.path" fill="none" stroke="#aab3c5"
+							stroke-width="1.5" marker-end="url(#specy-arrow)" />
+					</svg>
+					<div class="nodes">
+						<div v-for="n in graph.nodes" :key="n.specy.id" class="node"
+							:class="{ active: selected.some((x) => x.id === n.specy.id) }"
+							:style="{ left: n.left + 'px', top: n.top + 'px' }"
+							:title="`ID ${n.specy.id} · 父物种 ${n.specy.parents.join('、') || '无'}`"
+							@click="selectNode(n, $event)">
+							<span class="node-id">#{{ n.specy.id }}</span>
+							<span class="node-name">{{ n.specy.displayName }}</span>
+						</div>
 					</div>
 				</div>
 			</div>
-		</div>
-		<p v-else>暂无物种</p>
+			<n-text v-else>暂无物种</n-text>
+		</n-card>
 
-		<h2>节点操作</h2>
-		<template v-if="selected.length">
-			<p>
-				已选中 {{ selected.length }} 个节点：
-				<span v-for="(s, i) in selected" :key="s.id">
-					#{{ s.id }}（{{ s.displayName }}）{{ i < selected.length - 1 ? "、" : "" }} </span>
-			</p>
-			<template v-if="selected.length === 1">
-				<label>新名字 <input v-model="editName" @keyup.enter="rename" /></label>
-				<button @click="rename">重命名</button>
+		<n-card title="节点操作" size="small">
+			<template v-if="selected.length">
+				<n-text style="display: block; margin-bottom: 8px">
+					已选中 {{ selected.length }} 个节点：
+					<span v-for="(s, i) in selected" :key="s.id">
+						#{{ s.id }}（{{ s.displayName }}）{{ i < selected.length - 1 ? "、" : "" }} </span>
+				</n-text>
+				<n-space v-if="selected.length === 1" align="center">
+					<n-input v-model:value="editName" placeholder="新名字" style="width: 200px"
+						@keyup.enter="rename" />
+					<n-button @click="rename">重命名</n-button>
+				</n-space>
+				<n-space style="margin-top: 8px">
+					<n-button type="error" @click="remove">
+						删除节点{{ selected.length > 1 ? `（${selected.length}）` : "" }}
+					</n-button>
+					<n-button @click="setAsParent">设为父节点</n-button>
+					<n-button v-if="selected.length >= 2" type="primary" @click="sendToMix">
+						混血可行性检测
+					</n-button>
+				</n-space>
 			</template>
-			<button @click="remove">
-				删除节点{{ selected.length > 1 ? `（${selected.length}）` : "" }}
-			</button>
-			<button @click="setAsParent">设为父节点</button>
-			<button v-if="selected.length >= 2" @click="sendToMix">混血可行性检测</button>
-		</template>
-		<p v-else>点击图谱中的节点以编辑或删除（按住 Shift 可多选）</p>
+			<n-text v-else>点击图谱中的节点以编辑或删除（按住 Shift 可多选）</n-text>
+		</n-card>
 
-		<h2>检测混血</h2>
-		<div>
-			物种
-			<ContentSelector v-model:selected="mixInput" type="specy" multiple />
-		</div>
-		<button @click="checkMix">检测</button>
-		<div v-if="mixResult">
-			可混血配对：
-			<span v-for="(p, i) in mixResult" :key="i"> [{{ p.a }}, {{ p.b }}] </span>
-		</div>
-		<p>{{ notice }}</p>
-	</div>
+		<n-card title="检测混血" size="small">
+			<n-space vertical>
+				<n-form-item label="物种">
+					<ContentSelector v-model:selected="mixInput" type="specy" multiple />
+				</n-form-item>
+				<n-button type="primary" @click="checkMix">检测</n-button>
+				<n-text v-if="mixResult">
+					可混血配对：
+					<span v-for="(p, i) in mixResult" :key="i"> [{{ p.a }}, {{ p.b }}] </span>
+				</n-text>
+			</n-space>
+		</n-card>
+		<n-text>{{ notice }}</n-text>
+	</n-space>
 </template>
 <style scoped>
 .graph-scroll {
