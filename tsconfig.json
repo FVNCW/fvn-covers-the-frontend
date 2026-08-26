@@ -2,7 +2,10 @@
     "compilerOptions": {
         "module": "esnext",
         "target": "esnext",
-        "types": ["vite/client"],
+        "types": [
+            "vite/client",
+            "bun"
+        ],
         "sourceMap": true,
         "declaration": true,
         "declarationMap": true,
@@ -17,9 +20,14 @@
         "skipLibCheck": true,
         "moduleResolution": "bundler",
         "paths": {
-            "@/*": ["src/*"]
+            "@/*": [
+                "src/*"
+            ]
         },
         "baseUrl": "."
     },
-    "include": ["src/**/*.ts", "src/**/*.vue"]
+    "include": [
+        "src/**/*.ts",
+        "src/**/*.vue"
+    ]
 }
