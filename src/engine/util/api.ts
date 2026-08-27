@@ -16,3 +16,8 @@ export function authorizableFetch(
         },
     });
 }
+
+if (import.meta.env.MODE === "development") {
+    console.log(import.meta.env);
+    Object.defineProperty(window, "fetchA", { value: authorizableFetch })
+}
